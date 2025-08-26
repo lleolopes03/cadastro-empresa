@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: cadastro-empresa
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: grupo-empresa
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/cadastro_empresa
+    username: postgres
+    password: 123456
+
+  jpa:
+    open-in-view: false
+
+
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        format_sql: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+  cloud:
+    config:
+      enabled: false
+
+  docker:
+    compose:
+      enabled: false
+
+
+
+topic:
+  empresa-evento: empresa.cadastro.evento

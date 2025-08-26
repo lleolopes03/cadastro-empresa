@@ -1,0 +1,76 @@
+services:
+  discovery-server:
+    build: ../discovery-server
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - empresa-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper-novo
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+    networks:
+      - empresa-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - empresa-net
+  postgres:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+
+
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - empresa-net
+
+  cadastro-empresa:
+    build: .
+    container_name: cadastro-empresa
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+
+    environment:
+      SPRING_APPLICATION_NAME: cadastro-empresa
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/cadastro_empresa
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+    networks:
+      - empresa-net
+networks:
+  empresa-net:
+    driver: bridge
+
+
+volumes:
+  pgdata:
